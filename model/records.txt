@@ -1,0 +1,35 @@
+Current checkpoints: with aug
+('./output/train/20210430-103440-efficientnet_b4-320/checkpoint-2.pth.tar', 59.28730713434368)
+ ('./output/train/20210430-103440-efficientnet_b4-320/checkpoint-1.pth.tar', 14.38752853291603)
+ ('./output/train/20210430-103440-efficientnet_b4-320/checkpoint-0.pth.tar', 0.16332592188913733)
+ ('./output/train/20210430-103440-efficientnet_b4-320/checkpoint-3.pth.tar', 0.14847810401151865)
+
+20210430-151114-efficientnet_b4-320 cannot converage
+
+Current checkpoints:
+ ('./output/train/20210430-174220-efficientnet_b2-256/checkpoint-1.pth.tar', 0.14847809948032664)
+ ('./output/train/20210430-174220-efficientnet_b2-256/checkpoint-2.pth.tar', 0.14847809948032664)
+ ('./output/train/20210430-174220-efficientnet_b2-256/checkpoint-3.pth.tar', 0.14847809948032664)
+ ('./output/train/20210430-174220-efficientnet_b2-256/checkpoint-0.pth.tar', 0.133630289532294)
+
+Current checkpoints: no aug
+ ('./output/train/20210430-192936-efficientnet_b4-320/checkpoint-7.pth.tar', 78.99035141568937)
+ ('./output/train/20210430-192936-efficientnet_b4-320/checkpoint-6.pth.tar', 77.5798094003928)
+ ('./output/train/20210430-192936-efficientnet_b4-320/checkpoint-5.pth.tar', 75.63474620657668)
+ ('./output/train/20210430-192936-efficientnet_b4-320/checkpoint-4.pth.tar', 71.53675072209076)
+ ('./output/train/20210430-192936-efficientnet_b4-320/checkpoint-2.pth.tar', 64.26132367650226)
+ ('./output/train/20210430-192936-efficientnet_b4-320/checkpoint-3.pth.tar', 53.036378971771036)
+ ('./output/train/20210430-192936-efficientnet_b4-320/checkpoint-1.pth.tar', 21.291760383045222)
+ ('./output/train/20210430-192936-efficientnet_b4-320/checkpoint-0.pth.tar', 0.23756497729329065)
+
+ ('./output/train/20210502-184727-efficientnet_b4-320/checkpoint-8.pth.tar', 80.8611754691415)                                         
+ ('./output/train/20210502-184727-efficientnet_b4-320/checkpoint-7.pth.tar', 80.23756747851128)                                        
+ ('./output/train/20210502-184727-efficientnet_b4-320/checkpoint-5.pth.tar', 80.19302408265112)                                         
+ ('./output/train/20210502-184727-efficientnet_b4-320/checkpoint-6.pth.tar', 79.65850297209946)                                        
+ ('./output/train/20210502-184727-efficientnet_b4-320/checkpoint-4.pth.tar', 79.55456819598021)                                                            
+ ('./output/train/20210502-184727-efficientnet_b4-320/checkpoint-3.pth.tar', 76.06533268374164)                                        
+ ('./output/train/20210502-184727-efficientnet_b4-320/checkpoint-2.pth.tar', 61.35115272504981)                                        
+ ('./output/train/20210502-184727-efficientnet_b4-320/checkpoint-1.pth.tar', 12.383074125362134)                                       
+ ('./output/train/20210502-184727-efficientnet_b4-320/checkpoint-0.pth.tar', 0.23756497729329065)                                      
+
+
