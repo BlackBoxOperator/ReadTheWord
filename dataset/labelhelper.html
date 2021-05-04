@@ -98,8 +98,9 @@ function setMode(mode){
 function update_count(){
   $('#unlab-count').text($('select[name="unlabeled"] option').length)
   $('#labed-count').text($('select[name="labeled"] option').length)
+  let offset = $('select[name="labeled"] option').length - start_labed;
   if($('select[name="labeled"] option').length
-    && ($('select[name="labeled"] option').length - start_labed) % 100 == 0){
+    && offset && offset % 100 == 0){
     if(confirm("Do you want to save?")){
       $('#save').click();
     }
@@ -149,7 +150,7 @@ $('#acc').click(function(){
     let opt = $('option:selected', $('select[name="unlabeled"]'))
     opt.attr('data-lab', opt.attr('data-orig'))
     $(`select[name="labeled"]`).append(
-      opt.clone().text(`${opt.attr('data-lab')} <= ${opt.text()}`)).animate({ scrollTop: $(document).height() }, 1000);
+      opt.clone().text(`${opt.attr('data-lab')} <= ${opt.text()}`)).animate({ scrollTop: $(`select[name="labeled"]`)[0].scrollHeight }, 1000);
     //opt.next().attr('selected', 'selected');
     $('select[name="unlabeled"]').val((opt.next().length ? opt.next() : opt.prev()).val()).change()
     opt.remove();
@@ -165,7 +166,7 @@ $('#relab').click(function(){
     let opt = $('option:selected', $('select[name="unlabeled"]'))
     opt.attr('data-lab', prompt('input new label:', opt.attr('data-orig')) || opt.attr('data-orig'))
     $(`select[name="labeled"]`).append(
-      opt.clone().text(`${opt.attr('data-lab')} <= ${opt.text()}`)).animate({ scrollTop: $(document).height() }, 1000);
+      opt.clone().text(`${opt.attr('data-lab')} <= ${opt.text()}`)).animate({ scrollTop: $(`select[name="labeled"]`)[0].scrollHeight }, 1000);
     //opt.next().attr('selected', 'selected');
     $('select[name="unlabeled"]').val((opt.next().length ? opt.next() : opt.prev()).val()).change()
     opt.remove();
@@ -181,7 +182,7 @@ $('#rej').click(function(){
     let opt = $('option:selected', $('select[name="unlabeled"]'))
     opt.attr('data-lab', 'x')
     $(`select[name="labeled"]`).append(
-      opt.clone().text(`${opt.attr('data-lab')} <= ${opt.text()}`)).animate({ scrollTop: $(document).height() }, 1000);
+      opt.clone().text(`${opt.attr('data-lab')} <= ${opt.text()}`)).animate({ scrollTop: $(`select[name="labeled"]`)[0].scrollHeight }, 1000);
     //opt.next().attr('selected', 'selected');
     $('select[name="unlabeled"]').val((opt.next().length ? opt.next() : opt.prev()).val()).change()
     opt.remove();
