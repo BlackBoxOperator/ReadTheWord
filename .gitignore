@@ -4,6 +4,7 @@ dataset/validation
 dataset/test
 dataset/data
 dataset/mini_data
+dataset/extra_data
 
 __pycache__
 pytorch-image-models
