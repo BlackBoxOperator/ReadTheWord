@@ -5,6 +5,19 @@
     <title>Labeling Helper</title>
     <script src="./jquery-3.6.0.min.js"></script>
     <style>
+#myProgress {
+  width: 100%;
+  background-color: #ddd;
+}
+
+#myBar {
+  width: 0%;
+  height: 30px;
+  background-color: #04AA6D;
+  text-align: center;
+  line-height: 30px;
+  color: white;
+}
 .btn-group button {
   background-color: #04AA6D; /* Green background */
   border: 1px solid green; /* Green border */
@@ -64,6 +77,11 @@
       <button id="res" style="width:100%">Restore</button>
     </div>
 
+    <br>
+    <div id="myProgress" style="display:none">
+      <div id="myBar">0%</div>
+    </div>
+
     <script type="text/javascript">
 
       var currentFile = ''
@@ -100,7 +118,7 @@ function update_count(){
   $('#labed-count').text($('select[name="labeled"] option').length)
   let offset = $('select[name="labeled"] option').length - start_labed;
   if($('select[name="labeled"] option').length
-    && offset && offset % 100 == 0){
+    && offset > 0 && offset % 100 == 0){
     if(confirm("Do you want to save?")){
       $('#save').click();
     }
@@ -214,21 +232,49 @@ document.getElementById('inputfile').addEventListener('change', function() {
     let entries = fr.result.trim().split('\n').map(x => x.split(' '));
     let labeled = entries.filter(x => x[2] !== '0');
     let unlabeled = entries.filter(x => x[2] == '0');
-
     labeled.sort((a, b) => a[1].localeCompare(b[1]));
     unlabeled.sort((a, b) => a[1].localeCompare(b[1]));
 
-    for(e of labeled)
-      $(`select[name="labeled"]`).append( `<option value="${e[0]}" data-orig="${e[1]}" data-lab="${e[2]}">${e[2]} <= ${e[0]}</option>`)
-    for(e of unlabeled)
-      $(`select[name="unlabeled"]`).append(`<option value="${e[0]}" data-orig="${e[1]}" data-lab="${e[2]}">${e[0]}</option>`)
+    let total = entries.length;
 
-    start_labed = $('select[name="labeled"] option').length;
-    update_count();
+
+    function progrec(arr, idx, bound, step, delay, func){
+      let s = step;
+      for(; idx < bound && s; idx++, s--){
+        func(arr[idx], idx, arr);
+      }
+      setTimeout(function(){
+        progrec(arr, idx, bound, step, delay, func);
+      }, delay);
+    }
+
+    start_labed = labeled.length;
+    $('#myProgress').show();
+
+    progrec(labeled, 0, labeled.length, 250, 10, (e, index, arr) => {
+      $(`select[name="labeled"]`).append( `<option value="${e[0]}" data-orig="${e[1]}" data-lab="${e[2]}">${e[2]} <= ${e[0]}</option>`)
+      progress(index / total);
+      update_count();
+    })
+
+    progrec(unlabeled, 0, unlabeled.length, 250, 10, (e, index, arr) => {
+      $(`select[name="unlabeled"]`).append(`<option value="${e[0]}" data-orig="${e[1]}" data-lab="${e[2]}">${e[0]}</option>`)
+      progress((index + labeled.length) / total);
+      update_count();
+    })
   }
   fr.readAsText(this.files[0]);
   currentFile = this.files[0].name
 });
+
+function progress(value) {
+  let elem = document.getElementById("myBar");
+  elem.style.width = String(value * 100) + "%";
+  elem.innerHTML = String(Math.floor(value * 100 * 100) / 100) + "%";
+  if(value > 0.9995) setTimeout(() => {
+    $('#myProgress').hide();
+  }, 3000);
+}
 
     </script>
   </body>
