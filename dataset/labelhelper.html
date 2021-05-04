@@ -238,30 +238,35 @@ document.getElementById('inputfile').addEventListener('change', function() {
     let total = entries.length;
 
 
-    function progrec(arr, idx, bound, step, delay, func){
+    function progrec(arr, idx, bound, step, delay, func, callback){
       let s = step;
       for(; idx < bound && s; idx++, s--){
         func(arr[idx], idx, arr);
       }
-      setTimeout(function(){
-        progrec(arr, idx, bound, step, delay, func);
-      }, delay);
+
+      if(idx < bound){
+        setTimeout(function(){
+          progrec(arr, idx, bound, step, delay, func, callback);
+        }, delay);
+      } else{ callback(); }
     }
 
     start_labed = labeled.length;
     $('#myProgress').show();
 
+
+    let do_unlab = () => progrec(unlabeled, 0, unlabeled.length, 250, 10,
+      (e, index, arr) => {
+        $(`select[name="unlabeled"]`).append(`<option value="${e[0]}" data-orig="${e[1]}" data-lab="${e[2]}">${e[0]}</option>`)
+        progress((index + labeled.length) / total);
+        update_count();
+    })
+
     progrec(labeled, 0, labeled.length, 250, 10, (e, index, arr) => {
       $(`select[name="labeled"]`).append( `<option value="${e[0]}" data-orig="${e[1]}" data-lab="${e[2]}">${e[2]} <= ${e[0]}</option>`)
       progress(index / total);
       update_count();
-    })
-
-    progrec(unlabeled, 0, unlabeled.length, 250, 10, (e, index, arr) => {
-      $(`select[name="unlabeled"]`).append(`<option value="${e[0]}" data-orig="${e[1]}" data-lab="${e[2]}">${e[0]}</option>`)
-      progress((index + labeled.length) / total);
-      update_count();
-    })
+    }, do_unlab)
   }
   fr.readAsText(this.files[0]);
   currentFile = this.files[0].name
