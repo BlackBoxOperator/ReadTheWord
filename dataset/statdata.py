@@ -1,6 +1,8 @@
 import os
+import matplotlib.pyplot as plt
 
 stat = dict()
+freq = dict()
 
 datadirs = ['train', 'validation', 'test']
 
@@ -12,8 +14,18 @@ for d in datadirs:
             stat[lab][d] = stat.setdefault(lab, dict()).get(d, 0) + 1
 
 for w in stat:
-    total = sum([stat[w].setdefault(d, 0) for d in datadirs])
-    if not total: print(stat)
-    tra, val, test = [stat[w][d] / total for d in datadirs]
+    freq[w] = sum([stat[w].setdefault(d, 0) for d in datadirs])
+    if not freq[w]: print(stat)
+    tra, val, test = [stat[w][d] / freq[w] for d in datadirs]
     if tra < 0.7 or val < 0.07 or test < 0.07:
         print(w, tra, val, test)
+
+yAxis, xAxis = list(zip(*sorted([(freq[w], w) for w in freq])))
+plt.bar(xAxis,yAxis)
+plt.title('word frequency')
+plt.xlabel('word')
+plt.ylabel('frequency')
+plt.show()
+print('avg:', sum(yAxis) / len(yAxis))
+print(len([y for y in yAxis if y < 100]))
+print(min(yAxis))

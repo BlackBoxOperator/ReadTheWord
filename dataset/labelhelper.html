@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <title>Labeling Helper</title>
+    <script src="./jquery-3.6.0.min.js"></script>
+    <style>
+.btn-group button {
+  background-color: #04AA6D; /* Green background */
+  border: 1px solid green; /* Green border */
+  color: white; /* White text */
+  padding: 10px 24px; /* Some padding */
+  cursor: pointer; /* Pointer/hand icon */
+  float: left; /* Float the buttons side by side */
+}
+
+.btn-group button:not(:last-child) {
+  border-right: none; /* Prevent double borders */
+}
+
+/* Clear floats (clearfix hack) */
+.btn-group:after {
+  content: "";
+  clear: both;
+  display: table;
+}
+
+/* Add a background color on hover */
+.btn-group button:hover {
+  background-color: #3e8e41;
+}
+    </style>
+  </head>
+
+  <body>
+    <button id="save">Download</button>
+    <input type="file" name="inputfile" id="inputfile">
+    <br><br>
+
+    <div style="display: flex; width:100% justify-content: center;">
+      <div style="width:100%">
+        <p>unlabeled: <span id="unlab-count"></span></p>
+        <select name="unlabeled" size="10" style="height:65%;width:100%"></select>  
+      </div>
+
+      <div style="width:100%">
+        <p>labeled: <span id="labed-count"></span></p>
+        <select name="labeled" size="10" style="height:65%;width:100%"></select>  
+      </div>
+    </div>
+
+    <center>
+      <p id="wtxt"></p>
+      <img id="wimg" src="" style="height:60px">
+    </center>
+
+    <div id="label-mode" class="btn-group" style="width:100%">
+      <button id="acc" style="width:33.3%">Accept(z)</button>
+      <button id="relab" style="width:33.3%;background-color:#ffaa00">ReLabel(x)</button>
+      <button id="rej" style="width:33.3%;background-color:#ff3300">Reject(c)</button>
+    </div>
+
+    <div id="unlabel-mode" class="btn-group" style="width:100%;display:none">
+      <button id="res" style="width:100%">Restore</button>
+    </div>
+
+    <script type="text/javascript">
+
+      var currentFile = ''
+      var curMode = 'unlabeled';
+      var start_labed = 0;
+
+function download(filename, text) {
+  var element = document.createElement('a');
+  element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+  element.setAttribute('download', filename);
+
+  element.style.display = 'none';
+  document.body.appendChild(element);
+
+  element.click();
+
+  document.body.removeChild(element);
+}
+
+function setMode(mode){
+  if(mode == 'labeled'){
+    $('#label-mode').hide();
+    $('#unlabel-mode').show();
+  }
+  else if(mode == 'unlabeled'){
+    $('#label-mode').show();
+    $('#unlabel-mode').hide();
+  }
+  curMode = mode;
+}
+
+function update_count(){
+  $('#unlab-count').text($('select[name="unlabeled"] option').length)
+  $('#labed-count').text($('select[name="labeled"] option').length)
+  if($('select[name="labeled"] option').length
+    && ($('select[name="labeled"] option').length - start_labed) % 100 == 0){
+    if(confirm("Do you want to save?")){
+      $('#save').click();
+    }
+  }
+}
+
+$(document).on("change", "select", function(event){
+  setMode($(this).attr('name'));
+  if(curMode == 'unlabeled')
+    $('#wtxt').text($('option:selected', this).attr('data-orig') || '')
+  else
+    $('#wtxt').text($('option:selected', this).attr('data-lab') || '')
+  $('#wimg').attr('src', $(this).val()) ;
+});
+
+$(document).on("click", "select", function(event){
+  setMode($(this).attr('name'));
+  $('#wimg').attr('src', $(this).val()) ;
+});
+
+$('#save').click(function(){
+  if(!currentFile) return alert("load file first");
+  let cont = $('select[name="labeled"] option').get().map(x => `${$(x).val()} ${$(x).attr('data-orig')} ${$(x).attr('data-lab')}`).join('\n')
+  cont += '\n' + $('select[name="unlabeled"] option').get().map(x => `${$(x).val()} ${$(x).attr('data-orig')} ${$(x).attr('data-lab')}`).join('\n')
+  download(currentFile, cont);
+  window.onbeforeunload = undefined;
+})
+
+$('#res').click(function(){
+  if(curMode == 'labeled'){
+    let opt = $('option:selected', $('select[name="labeled"]'))
+    opt.attr('data-lab', '0')
+    let moved = opt.clone().text(`${opt.val()}`);
+    $(`select[name="unlabeled"]`).prepend(moved)
+    //moved.attr('selected', 'selected');
+    $('select[name="labeled"]').val((opt.prev().length ? opt.prev() : opt.next()).val()).change()
+    opt.remove();
+    window.onbeforeunload = function(){
+      return 'Not Saved, Download Before leave?';
+    };
+    update_count();
+  }
+});
+
+$('#acc').click(function(){
+  if(curMode == 'unlabeled'){
+    let opt = $('option:selected', $('select[name="unlabeled"]'))
+    opt.attr('data-lab', opt.attr('data-orig'))
+    $(`select[name="labeled"]`).append(
+      opt.clone().text(`${opt.attr('data-lab')} <= ${opt.text()}`)).animate({ scrollTop: $(document).height() }, 1000);
+    //opt.next().attr('selected', 'selected');
+    $('select[name="unlabeled"]').val((opt.next().length ? opt.next() : opt.prev()).val()).change()
+    opt.remove();
+    window.onbeforeunload = function(){
+      return 'Not Saved, Download Before leave?';
+    };
+    update_count();
+  }
+});
+
+$('#relab').click(function(){
+  if(curMode == 'unlabeled'){
+    let opt = $('option:selected', $('select[name="unlabeled"]'))
+    opt.attr('data-lab', prompt('input new label:', opt.attr('data-orig')) || opt.attr('data-orig'))
+    $(`select[name="labeled"]`).append(
+      opt.clone().text(`${opt.attr('data-lab')} <= ${opt.text()}`)).animate({ scrollTop: $(document).height() }, 1000);
+    //opt.next().attr('selected', 'selected');
+    $('select[name="unlabeled"]').val((opt.next().length ? opt.next() : opt.prev()).val()).change()
+    opt.remove();
+    window.onbeforeunload = function(){
+      return 'Not Saved, Download Before leave?';
+    };
+    update_count();
+  }
+});
+
+$('#rej').click(function(){
+  if(curMode == 'unlabeled'){
+    let opt = $('option:selected', $('select[name="unlabeled"]'))
+    opt.attr('data-lab', 'x')
+    $(`select[name="labeled"]`).append(
+      opt.clone().text(`${opt.attr('data-lab')} <= ${opt.text()}`)).animate({ scrollTop: $(document).height() }, 1000);
+    //opt.next().attr('selected', 'selected');
+    $('select[name="unlabeled"]').val((opt.next().length ? opt.next() : opt.prev()).val()).change()
+    opt.remove();
+    window.onbeforeunload = function(){
+      return 'Not Saved, Download Before leave?';
+    };
+    update_count();
+  }
+});
+
+$(document).keypress(function(e){
+  let char = event.which || event.keyCode;
+  if(char == 90 || char == 122){ // z
+    $('#acc').click();
+  }
+  else if(char == 120 || char == 88){ // x
+    $('#relab').click();
+  }
+  else if(char == 99 || char == 67){ // c
+    $('#rej').click();
+  }
+});
+
+document.getElementById('inputfile').addEventListener('change', function() {
+
+  var fr = new FileReader();
+  fr.onload = function(){
+
+    let entries = fr.result.trim().split('\n').map(x => x.split(' '));
+    let labeled = entries.filter(x => x[2] !== '0');
+    let unlabeled = entries.filter(x => x[2] == '0');
+
+    labeled.sort((a, b) => a[1].localeCompare(b[1]));
+    unlabeled.sort((a, b) => a[1].localeCompare(b[1]));
+
+    for(e of labeled)
+      $(`select[name="labeled"]`).append( `<option value="${e[0]}" data-orig="${e[1]}" data-lab="${e[2]}">${e[2]} <= ${e[0]}</option>`)
+    for(e of unlabeled)
+      $(`select[name="unlabeled"]`).append(`<option value="${e[0]}" data-orig="${e[1]}" data-lab="${e[2]}">${e[0]}</option>`)
+
+    start_labed = $('select[name="labeled"] option').length;
+    update_count();
+  }
+  fr.readAsText(this.files[0]);
+  currentFile = this.files[0].name
+});
+
+    </script>
+  </body>
+</html>

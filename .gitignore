@@ -3,6 +3,7 @@ dataset/train
 dataset/validation
 dataset/test
 dataset/data
+dataset/mini_data
 
 __pycache__
 pytorch-image-models
