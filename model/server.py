@@ -13,8 +13,8 @@ import numpy as np
 app = Flask(__name__)
 
 ####### PUT YOUR INFORMATION HERE #######
-CAPTAIN_EMAIL = 'my@gmail.com'          #
-SALT = 'my_salt'                        #
+CAPTAIN_EMAIL = 'nobodyzxc.tw@gmail.com'#
+SALT = 'blakboxoperator'                #
 #########################################
 
 #[API 開發說明文件] : https://hackmd.io/@wendy81214/BygUwgs4u
@@ -47,6 +47,20 @@ def base64_to_binary_for_cv2(image_64_encoded):
     img_binary = base64.b64decode(img_base64_binary)
     image = cv2.imdecode(np.frombuffer(img_binary, np.uint8), cv2.IMREAD_COLOR)
     return image
+
+def base64_to_binary_for_PIL(image_64_encoded):
+    """ Convert base64 to numpy.ndarray for PIL.
+
+    @param:
+        image_64_encode(str): image that encoded in base64 string format.
+    @returns:
+        image(numpy.ndarray): an image.
+    """
+    img_base64_binary = image_64_encoded.encode("utf-8")
+    img_binary = base64.b64decode(img_base64_binary)
+    image = Image.fromarray(np.frombuffer(img_binary, np.uint8), 'RGB')
+    return image
+
 
 
 def predict(image):
@@ -89,9 +103,9 @@ def inference():
     # 自行取用，可紀錄玉山呼叫的 timestamp
     esun_timestamp = data['esun_timestamp']
 
-    # 取 image(base64 encoded) 並轉成 cv2 可用格式
+    # 取 image(base64 encoded) 並轉成 PIL 可用格式
     image_64_encoded = data['image']
-    image = base64_to_binary_for_cv2(image_64_encoded)
+    image = base64_to_binary_for_PIL(image_64_encoded)
 
     t = datetime.datetime.now()
     ts = str(int(t.utcnow().timestamp()))
