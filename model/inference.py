@@ -84,20 +84,20 @@ def inf_launch(arg_line = ''):
     else:
         model = model.cuda()
 
-    loader = create_loader(
-        ImageDataset(args.data),
-        input_size=config['input_size'],
-        batch_size=args.batch_size,
-        use_prefetcher=True,
-        interpolation=config['interpolation'],
-        mean=config['mean'],
-        std=config['std'],
-        num_workers=args.workers,
-        crop_pct=1.0 if test_time_pool else config['crop_pct'])
-
     model.eval()
 
-    def inf_call():
+    def inf_call(images):
+
+        loader = create_loader(
+            ImageDataset(images),
+            input_size=config['input_size'],
+            batch_size=args.batch_size,
+            use_prefetcher=True,
+            interpolation=config['interpolation'],
+            mean=config['mean'],
+            std=config['std'],
+            num_workers=args.workers,
+            crop_pct=1.0 if test_time_pool else config['crop_pct'])
 
         k = min(args.topk, args.num_classes)
         batch_time = AverageMeter()
