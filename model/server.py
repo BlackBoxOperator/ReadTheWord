@@ -10,8 +10,10 @@ from flask import jsonify
 import numpy as np
 
 from PIL import Image
-from inference import inf_launch
+from inference import model2inf, ensemble
 from io import BytesIO
+
+from time import sleep
 
 app = Flask(__name__)
 
@@ -98,6 +100,7 @@ def _check_datatype_to_string(prediction):
         return True
     raise TypeError('Prediction is not in string type.')
 
+cache_answer = {}
 
 @app.route('/inference', methods=['POST'])
 def inference():
@@ -116,21 +119,35 @@ def inference():
     ts = str(int(t.utcnow().timestamp()))
     server_uuid = generate_server_uuid(CAPTAIN_EMAIL + ts)
 
-    try:
-        answer = predict([image])
-    except TypeError as type_error:
-        # You can write some log...
-        raise type_error
-    except Exception as e:
-        # You can write some log...
-        raise e
-
     server_timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    return jsonify({'esun_uuid': data['esun_uuid'],
-                    'server_uuid': server_uuid,
-                    'answer': answer,
-                    'server_timestamp': server_timestamp})
+    answer_template = lambda ans: jsonify({
+        'esun_uuid': data['esun_uuid'],
+        'server_uuid': server_uuid,
+        'answer': ans,
+        'server_timestamp': server_timestamp})
+
+    if data['esun_uuid'] in cache_answer:
+        if cache_answer[data['esun_uuid']] != None:
+            return answer_template(cache_answer[data['esun_uuid']])
+        else:
+            while cache_answer[data['esun_uuid']] == None:
+                sleep(0.2)
+            return answer_template(cache_answer[data['esun_uuid']])
+    else:
+        cache_answer[data['esun_uuid']] = None
+        try:
+            answer = predict([image])
+        except TypeError as type_error:
+            # You can write some log...
+            print("tye error: {}".format(type_error))
+        except Exception as e:
+            # You can write some log...
+            print("exception: {}".format(e))
+
+        cache_answer[data['esun_uuid']] = answer
+
+        return answer_template(answer)
 
 
 if __name__ == "__main__":
@@ -141,7 +158,38 @@ if __name__ == "__main__":
     arg_parser.add_argument('-d', '--debug', default=False, help='debug')
     options = arg_parser.parse_args()
 
-    predict = inf_launch('--model tf_efficientnet_b5_ns --pretrained --checkpoint ./output/train/20210514-133801-tf_efficientnet_b5_ns-256/checkpoint-29.pth.tar -b 1 --input-size 3 256 256 -j 8 --num-classes 801')
+    infs = [ model2inf("""--model tf_efficientnet_b5_ns
+                         --pretrained --checkpoint ./output/train/20210514-133801-tf_efficientnet_b5_ns-256/checkpoint-29.pth.tar
+                         -b 1 --input-size 3 256 256 -j 8 --num-classes 801""")
+            , model2inf("""--model tf_efficientnet_b7_ns
+                         --pretrained --checkpoint ./output/train/20210515-052108-tf_efficientnet_b7_ns-256/checkpoint-27.pth.tar
+                         -b 1 --input-size 3 256 256 -j 8 --num-classes 801""")
+            , model2inf("""--model tf_efficientnet_b6_ns
+                         --pretrained --checkpoint ./output/train/20210516-022130-tf_efficientnet_b6_ns-256/checkpoint-27.pth.tar
+                         -b 1 --input-size 3 256 256 -j 8 --num-classes 801""")
+            , model2inf("""--model tf_efficientnet_b5_ns
+                         --pretrained --checkpoint ./output/train/20210516-212550-tf_efficientnet_b5_ns-256/checkpoint-38.pth.tar
+                         -b 1 --input-size 3 256 256 -j 8 --num-classes 801""")
+            #, model2inf("""--model tf_efficientnet_b5_ns
+            #             --pretrained --checkpoint ./output/train/20210516-212550-tf_efficientnet_b5_ns-256/checkpoint-38.pth.tar
+            #             -b 1 --input-size 3 256 256 -j 8 --num-classes 801""")
+            #, model2inf("""--model tf_efficientnet_b5_ns
+            #             --pretrained --checkpoint ./output/train/20210516-212550-tf_efficientnet_b5_ns-256/checkpoint-38.pth.tar
+            #             -b 1 --input-size 3 256 256 -j 8 --num-classes 801""")
+            #, model2inf("""--model tf_efficientnet_b5_ns
+            #             --pretrained --checkpoint ./output/train/20210516-212550-tf_efficientnet_b5_ns-256/checkpoint-38.pth.tar
+            #             -b 1 --input-size 3 256 256 -j 8 --num-classes 801""")
+           ] # 4 models at the same time
+
+    weights = [1, 0.8, 0.6, 0.4, 0.2]
+
+    predict = ensemble(infs, weights)
+
+    # warnup
+    #with open("sample.jpg", "rb") as image_file:
+    #    encoded_string = base64.b64encode(image_file.read())
+    sample = Image.open("sample.jpg")
+    for inf in infs: inf([sample])
 
     if not predict:
         print("invalid model args")

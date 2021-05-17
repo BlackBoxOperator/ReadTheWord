@@ -169,6 +169,7 @@ ns b5 mixed 10
  ('./output/train/20210514-133801-tf_efficientnet_b5_ns-256/checkpoint-27.pth.tar', 91.97475202885482)
  ('./output/train/20210514-133801-tf_efficientnet_b5_ns-256/checkpoint-29.pth.tar', 91.97475202885482)
 
+ns b7
  ('./output/train/20210515-052108-tf_efficientnet_b7_ns-256/checkpoint-23.pth.tar', 92.87646528403968)
  ('./output/train/20210515-052108-tf_efficientnet_b7_ns-256/checkpoint-22.pth.tar', 92.6961226330027)
  ('./output/train/20210515-052108-tf_efficientnet_b7_ns-256/checkpoint-24.pth.tar', 92.60595130748422)
@@ -179,3 +180,28 @@ ns b5 mixed 10
  ('./output/train/20210515-052108-tf_efficientnet_b7_ns-256/checkpoint-27.pth.tar', 92.0649233543733)
  ('./output/train/20210515-052108-tf_efficientnet_b7_ns-256/checkpoint-26.pth.tar', 91.88458070333634)
  ('./output/train/20210515-052108-tf_efficientnet_b7_ns-256/checkpoint-18.pth.tar', 91.5238954012624)
+
+ns b6
+('./output/train/20210516-022130-tf_efficientnet_b6_ns-256/checkpoint-25.pth.tar', 92.06492448261561)
+ ('./output/train/20210516-022130-tf_efficientnet_b6_ns-256/checkpoint-26.pth.tar', 92.06492448261561)
+ ('./output/train/20210516-022130-tf_efficientnet_b6_ns-256/checkpoint-27.pth.tar', 91.97475317085618)
+ ('./output/train/20210516-022130-tf_efficientnet_b6_ns-256/checkpoint-24.pth.tar', 91.88458185909674)
+ ('./output/train/20210516-022130-tf_efficientnet_b6_ns-256/checkpoint-28.pth.tar', 91.7944105473373)
+ ('./output/train/20210516-022130-tf_efficientnet_b6_ns-256/checkpoint-29.pth.tar', 91.7944105473373)
+ ('./output/train/20210516-022130-tf_efficientnet_b6_ns-256/checkpoint-30.pth.tar', 91.61406788254128)
+ ('./output/train/20210516-022130-tf_efficientnet_b6_ns-256/checkpoint-23.pth.tar', 91.523896612059)
+ ('./output/train/20210516-022130-tf_efficientnet_b6_ns-256/checkpoint-20.pth.tar', 90.98286874150241)
+ ('./output/train/20210516-022130-tf_efficientnet_b6_ns-256/checkpoint-16.pth.tar', 90.89269734718866)
+
+train valid b5 mixed
+ ('./output/train/20210516-212550-tf_efficientnet_b5_ns-256/checkpoint-36.pth.tar', 92.24413750979946)
+ ('./output/train/20210516-212550-tf_efficientnet_b5_ns-256/checkpoint-35.pth.tar', 92.19083261388197)
+ ('./output/train/20210516-212550-tf_efficientnet_b5_ns-256/checkpoint-38.pth.tar', 92.16418016592323)
+ ('./output/train/20210516-212550-tf_efficientnet_b5_ns-256/checkpoint-33.pth.tar', 92.137527730165)
+ ('./output/train/20210516-212550-tf_efficientnet_b5_ns-256/checkpoint-37.pth.tar', 92.11087525780522)
+ ('./output/train/20210516-212550-tf_efficientnet_b5_ns-256/checkpoint-32.pth.tar', 91.95096057005274)
+ ('./output/train/20210516-212550-tf_efficientnet_b5_ns-256/checkpoint-34.pth.tar', 91.87100322617651)
+ ('./output/train/20210516-212550-tf_efficientnet_b5_ns-256/checkpoint-31.pth.tar', 91.81769830585797)
+ ('./output/train/20210516-212550-tf_efficientnet_b5_ns-256/checkpoint-30.pth.tar', 91.71108853842404)
+ ('./output/train/20210516-212550-tf_efficientnet_b5_ns-256/checkpoint-26.pth.tar', 91.41791159867732)
+

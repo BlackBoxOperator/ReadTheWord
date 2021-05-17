@@ -61,13 +61,17 @@ def question(image_base64):
             ir = requests.post('{}/inference'.format(ip),
                     json = inference_data,
                     timeout = time_limit)
-            print(ir.json()['answer'])
+            if ir.status_code == requests.codes.ok:
+                print(ir.json()['answer'])
+            #else:
+            #    print("invalid answer.")
             print("total cost {} secs.".format(get_timestamp() - stmp))
         except Exception as e:
             print(e)
         if ir and ir.status_code == requests.codes.ok:
             break
-    else: raise Exception("inference failed")
+    else:
+        raise Exception("inference failed, NO SCORE")
 
     return ir.json()['answer']
 
@@ -125,6 +129,8 @@ if __name__ == '__main__':
                     pred = emit_question(fpath)
                     print("{} ?=> {}".format(fpath, pred))
                     #lab = name.split('_')[1].split('.')[0]
+        else: print("no such file or directory: {}".format(path))
+
 
     #for idx, (q_id, q_cap, q_cont, *_) in \
     #        enumerate(zip(queries['index'],queries['title'], queries['content'])):

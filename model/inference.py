@@ -12,6 +12,10 @@ import argparse
 import logging
 import numpy as np
 import torch
+import numbers
+from pprint import pprint
+
+import base64
 
 from timm.models import create_model, apply_test_time_pool
 from timm.data import ImageDataset, create_loader, resolve_data_config
@@ -63,9 +67,57 @@ def make_parser(data = True):
 if __name__ == '__main__':
     parser = make_parser()
 
-def inf_launch(arg_line = ''):
+def ensemble(infs, weights = [1, 0.8, 0.6, 0.4, 0.2]):
+    if isinstance(weights[0], numbers.Number):
+        """
+        topN weights for all model
+        [1, 0.8, 0.6, 0.4, 0.2]
+            with [model1, model2, ...]
+        """
+        def apply_weight(topNlist):
+            return [[[(l, v * w)
+                            for (l, v), w in zip(rank, weights)]
+                        for rank in img_ranks]
+                    for img_ranks in topNlist]
+
+    elif len(weights) == len(infs):
+        """
+        topN weights for each model
+        [[1, 0.8, 0.6, 0.4, 0.2], [0.8, 0.4, 0.3, 0.2, 0.1]]
+            with [model1, model2]
+        """
+        def apply_weight(topNlist):
+            return [[[(l, v * w)
+                            for (l, v), w in zip(rank, weight)]
+                        for rank, weight in zip(img_ranks, weights)]
+                    for img_ranks in topNlist]
+
+    def predict(imgs):
+        labs = []
+        res = [inf(imgs) for inf in infs]
+        pprint(res)
+        for img_ranks in apply_weight(list(zip(*res))):
+            candidates = dict()
+            for rank in img_ranks:
+                for (k, v) in rank:
+                    candidates[k] = candidates.get(k, 0) + v
+            rank = [(k, candidates[k]) for k in candidates]
+            rank.sort(key = lambda v: v[1], reverse = True)
+            pprint(rank)
+            labs.append(rank[0][0])
+        return labs
+    return predict
+
+log_setted = False
+
+def model2inf(arg_line = ''):
+
     if not arg_line: return False
-    setup_default_logging()
+
+    global log_setted
+    if not log_setted:
+        log_setted = True
+        setup_default_logging()
     parser = make_parser(False)
     args = parser.parse_args(shlex.split(arg_line))
     # might as well try to do something useful...
@@ -112,13 +164,16 @@ def inf_launch(arg_line = ''):
         k = min(args.topk, args.num_classes)
         batch_time = AverageMeter()
         end = time.time()
+
         topk_ids = []
+        topk_vals = []
         with torch.no_grad():
             for batch_idx, (input, _) in enumerate(loader):
                 input = input.cuda()
                 labels = model(input)
-                topk = labels.topk(k)[1]
+                topv, topk = labels.topk(k)
                 topk_ids.append(topk.cpu().numpy())
+                topk_vals.append(topv.cpu().numpy())
 
                 # measure elapsed time
                 batch_time.update(time.time() - end)
@@ -128,8 +183,8 @@ def inf_launch(arg_line = ''):
                     _logger.info('Predict: [{0}/{1}] Time {batch_time.val:.3f} ({batch_time.avg:.3f})'.format(
                         batch_idx, len(loader), batch_time=batch_time))
 
-        print(topk_ids)
         topk_ids = np.reshape(np.concatenate(topk_ids, axis=0).squeeze(), (-1, k))
+        topk_vals = np.reshape(np.concatenate(topk_vals, axis=0).squeeze(), (-1, k))
 
         #with open(os.path.join(args.output_dir, './topk_ids.csv'), 'w') as out_file:
         #    filenames = loader.dataset.filenames(basename=True)
@@ -138,9 +193,8 @@ def inf_launch(arg_line = ''):
         #            filename, label[0], label[1], label[2], label[3], label[4]))
 
         results = []
-        print(topk_ids)
-        for label in topk_ids:
-            results.append(i2k[str(label[0])])
+        for labels, values in zip(topk_ids, topk_vals):
+            results.append([(i2k[str(lab)], val) for lab, val in zip(labels, values)])
 
         return results
 
@@ -205,8 +259,8 @@ def main():
                 _logger.info('Predict: [{0}/{1}] Time {batch_time.val:.3f} ({batch_time.avg:.3f})'.format(
                     batch_idx, len(loader), batch_time=batch_time))
 
-    topk_ids = np.concatenate(topk_ids, axis=0).squeeze()
-    topk_vals = np.concatenate(topk_vals, axis=0).squeeze()
+    topk_ids = np.reshape(np.concatenate(topk_ids, axis=0).squeeze(), (-1, k))
+    topk_vals = np.reshape(np.concatenate(topk_vals, axis=0).squeeze(), (-1, k))
 
     with open(os.path.join(args.output_dir, './topk_ids.csv'), 'w') as out_file:
         filenames = loader.dataset.filenames(basename=True)
