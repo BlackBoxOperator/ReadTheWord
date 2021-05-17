@@ -9,6 +9,9 @@ from flask import request
 from flask import jsonify
 import numpy as np
 
+from PIL import Image
+from inference import inf_launch
+from io import BytesIO
 
 app = Flask(__name__)
 
@@ -56,29 +59,30 @@ def base64_to_binary_for_PIL(image_64_encoded):
     @returns:
         image(numpy.ndarray): an image.
     """
-    img_base64_binary = image_64_encoded.encode("utf-8")
-    img_binary = base64.b64decode(img_base64_binary)
-    image = Image.fromarray(np.frombuffer(img_binary, np.uint8), 'RGB')
+    #img_base64_binary = image_64_encoded.encode("utf-8")
+    #img_binary = base64.b64decode(img_base64_binary)
+    #image = Image.fromarray(np.frombuffer(img_binary, np.uint8), 'RGB')
+    image = Image.open(BytesIO(base64.b64decode(image_64_encoded)))
     return image
 
 
 
-def predict(image):
-    """ Predict your model result.
-
-    @param:
-        image (numpy.ndarray): an image.
-    @returns:
-        prediction (str): a word.
-    """
-
-    ####### PUT YOUR MODEL INFERENCING CODE HERE #######
-    prediction = '陳'
-
-
-    ####################################################
-    if _check_datatype_to_string(prediction):
-        return prediction
+#def predict(image):
+#    """ Predict your model result.
+#
+#    @param:
+#        image (numpy.ndarray): an image.
+#    @returns:
+#        prediction (str): a word.
+#    """
+#
+#    ####### PUT YOUR MODEL INFERENCING CODE HERE #######
+#    prediction = '陳'
+#
+#
+#    ####################################################
+#    if _check_datatype_to_string(prediction):
+#        return prediction
 
 
 def _check_datatype_to_string(prediction):
@@ -106,19 +110,21 @@ def inference():
     # 取 image(base64 encoded) 並轉成 PIL 可用格式
     image_64_encoded = data['image']
     image = base64_to_binary_for_PIL(image_64_encoded)
+    #image = base64_to_binary_for_cv2(image_64_encoded)
 
     t = datetime.datetime.now()
     ts = str(int(t.utcnow().timestamp()))
     server_uuid = generate_server_uuid(CAPTAIN_EMAIL + ts)
 
     try:
-        answer = predict(image)
+        answer = predict([image])
     except TypeError as type_error:
         # You can write some log...
         raise type_error
     except Exception as e:
         # You can write some log...
         raise e
+
     server_timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     return jsonify({'esun_uuid': data['esun_uuid'],
@@ -132,7 +138,13 @@ if __name__ == "__main__":
         usage='Usage: python ' + __file__ + ' [--port <port>] [--help]'
     )
     arg_parser.add_argument('-p', '--port', default=8080, help='port')
-    arg_parser.add_argument('-d', '--debug', default=True, help='debug')
+    arg_parser.add_argument('-d', '--debug', default=False, help='debug')
     options = arg_parser.parse_args()
+
+    predict = inf_launch('--model tf_efficientnet_b5_ns --pretrained --checkpoint ./output/train/20210514-133801-tf_efficientnet_b5_ns-256/checkpoint-29.pth.tar -b 1 --input-size 3 256 256 -j 8 --num-classes 801')
+
+    if not predict:
+        print("invalid model args")
+        exit(1)
 
     app.run(debug=options.debug, port=options.port)

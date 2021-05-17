@@ -21,46 +21,52 @@ from dataset import PILDataset
 torch.backends.cudnn.benchmark = True
 _logger = logging.getLogger('inference')
 
+def make_parser(data = True):
+    parser = argparse.ArgumentParser(description='PyTorch ImageNet Inference')
 
-parser = argparse.ArgumentParser(description='PyTorch ImageNet Inference')
-parser.add_argument('data', metavar='DIR',
-                    help='path to dataset')
-parser.add_argument('--output_dir', metavar='DIR', default='./',
-                    help='path to output files')
-parser.add_argument('--model', '-m', metavar='MODEL', default='dpn92',
-                    help='model architecture (default: dpn92)')
-parser.add_argument('-j', '--workers', default=2, type=int, metavar='N',
-                    help='number of data loading workers (default: 2)')
-parser.add_argument('-b', '--batch-size', default=256, type=int,
-                    metavar='N', help='mini-batch size (default: 256)')
-parser.add_argument('--img-size', default=None, type=int,
-                    metavar='N', help='Input image dimension')
-parser.add_argument('--input-size', default=None, nargs=3, type=int,
-                    metavar='N N N', help='Input all image dimensions (d h w, e.g. --input-size 3 224 224), uses model default if empty')
-parser.add_argument('--mean', type=float, nargs='+', default=None, metavar='MEAN',
-                    help='Override mean pixel value of dataset')
-parser.add_argument('--std', type=float, nargs='+', default=None, metavar='STD',
-                    help='Override std deviation of of dataset')
-parser.add_argument('--interpolation', default='', type=str, metavar='NAME',
-                    help='Image resize interpolation type (overrides model)')
-parser.add_argument('--num-classes', type=int, default=1000,
-                    help='Number classes in dataset')
-parser.add_argument('--log-freq', default=10, type=int,
-                    metavar='N', help='batch logging frequency (default: 10)')
-parser.add_argument('--checkpoint', default='', type=str, metavar='PATH',
-                    help='path to latest checkpoint (default: none)')
-parser.add_argument('--pretrained', dest='pretrained', action='store_true',
-                    help='use pre-trained model')
-parser.add_argument('--num-gpu', type=int, default=1,
-                    help='Number of GPUS to use')
-parser.add_argument('--no-test-pool', dest='no_test_pool', action='store_true',
-                    help='disable test time pool')
-parser.add_argument('--topk', default=5, type=int,
+    if data: parser.add_argument('data', metavar='DIR', help='path to dataset')
+
+    parser.add_argument('--output_dir', metavar='DIR', default='./',
+                        help='path to output files')
+    parser.add_argument('--model', '-m', metavar='MODEL', default='dpn92',
+                        help='model architecture (default: dpn92)')
+    parser.add_argument('-j', '--workers', default=2, type=int, metavar='N',
+                        help='number of data loading workers (default: 2)')
+    parser.add_argument('-b', '--batch-size', default=256, type=int,
+                        metavar='N', help='mini-batch size (default: 256)')
+    parser.add_argument('--img-size', default=None, type=int,
+                        metavar='N', help='Input image dimension')
+    parser.add_argument('--input-size', default=None, nargs=3, type=int,
+                        metavar='N N N', help='Input all image dimensions (d h w, e.g. --input-size 3 224 224), uses model default if empty')
+    parser.add_argument('--mean', type=float, nargs='+', default=None, metavar='MEAN',
+                        help='Override mean pixel value of dataset')
+    parser.add_argument('--std', type=float, nargs='+', default=None, metavar='STD',
+                        help='Override std deviation of of dataset')
+    parser.add_argument('--interpolation', default='', type=str, metavar='NAME',
+                        help='Image resize interpolation type (overrides model)')
+    parser.add_argument('--num-classes', type=int, default=1000,
+                        help='Number classes in dataset')
+    parser.add_argument('--log-freq', default=10, type=int,
+                        metavar='N', help='batch logging frequency (default: 10)')
+    parser.add_argument('--checkpoint', default='', type=str, metavar='PATH',
+                        help='path to latest checkpoint (default: none)')
+    parser.add_argument('--pretrained', dest='pretrained', action='store_true',
+                        help='use pre-trained model')
+    parser.add_argument('--num-gpu', type=int, default=1,
+                        help='Number of GPUS to use')
+    parser.add_argument('--no-test-pool', dest='no_test_pool', action='store_true',
+                        help='disable test time pool')
+    parser.add_argument('--topk', default=5, type=int,
                     metavar='N', help='Top-k to output to CSV')
+    return parser
+
+if __name__ == '__main__':
+    parser = make_parser()
 
 def inf_launch(arg_line = ''):
     if not arg_line: return False
     setup_default_logging()
+    parser = make_parser(False)
     args = parser.parse_args(shlex.split(arg_line))
     # might as well try to do something useful...
     args.pretrained = args.pretrained or not args.checkpoint
@@ -86,10 +92,14 @@ def inf_launch(arg_line = ''):
 
     model.eval()
 
+
+    with open("class2idx.txt") as k2i:
+        i2k = {i: k for k, i in [l.split() for l in k2i.read().split('\n') if l.strip()]}
+
     def inf_call(images):
 
         loader = create_loader(
-            ImageDataset(images),
+            PILDataset(images),
             input_size=config['input_size'],
             batch_size=args.batch_size,
             use_prefetcher=True,
@@ -118,7 +128,8 @@ def inf_launch(arg_line = ''):
                     _logger.info('Predict: [{0}/{1}] Time {batch_time.val:.3f} ({batch_time.avg:.3f})'.format(
                         batch_idx, len(loader), batch_time=batch_time))
 
-        topk_ids = np.concatenate(topk_ids, axis=0).squeeze()
+        print(topk_ids)
+        topk_ids = np.reshape(np.concatenate(topk_ids, axis=0).squeeze(), (-1, k))
 
         #with open(os.path.join(args.output_dir, './topk_ids.csv'), 'w') as out_file:
         #    filenames = loader.dataset.filenames(basename=True)
@@ -127,8 +138,9 @@ def inf_launch(arg_line = ''):
         #            filename, label[0], label[1], label[2], label[3], label[4]))
 
         results = []
+        print(topk_ids)
         for label in topk_ids:
-            results.append(label[0])
+            results.append(i2k[str(label[0])])
 
         return results
 
@@ -160,7 +172,7 @@ def main():
         model = model.cuda()
 
     loader = create_loader(
-        PILDataset(args.data),
+        ImageDataset(args.data),
         input_size=config['input_size'],
         batch_size=args.batch_size,
         use_prefetcher=True,
@@ -176,12 +188,14 @@ def main():
     batch_time = AverageMeter()
     end = time.time()
     topk_ids = []
+    topk_vals = []
     with torch.no_grad():
         for batch_idx, (input, _) in enumerate(loader):
             input = input.cuda()
             labels = model(input)
-            topk = labels.topk(k)[1]
+            topv, topk = labels.topk(k)
             topk_ids.append(topk.cpu().numpy())
+            topk_vals.append(topv.cpu().numpy())
 
             # measure elapsed time
             batch_time.update(time.time() - end)
@@ -192,13 +206,13 @@ def main():
                     batch_idx, len(loader), batch_time=batch_time))
 
     topk_ids = np.concatenate(topk_ids, axis=0).squeeze()
+    topk_vals = np.concatenate(topk_vals, axis=0).squeeze()
 
     with open(os.path.join(args.output_dir, './topk_ids.csv'), 'w') as out_file:
         filenames = loader.dataset.filenames(basename=True)
-        for filename, label in zip(filenames, topk_ids):
-            out_file.write('{0},{1},{2},{3},{4},{5}\n'.format(
-                filename, label[0], label[1], label[2], label[3], label[4]))
-
+        for filename, label, vals in zip(filenames, topk_ids, topk_vals):
+            out_file.write('{0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10}\n'.format(
+                filename, label[0], label[1], label[2], label[3], label[4],vals[0], vals[1], vals[2], vals[3], vals[4]))
 
 if __name__ == '__main__':
     main()

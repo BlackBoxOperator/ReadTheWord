@@ -34,7 +34,10 @@ class PILDataset(data.Dataset):
     def __getitem__(self, index):
         img, target = self.images[index], None
         try:
-            img = img.read() if self.load_bytes else Image.open(img).convert('RGB')
+            if self.load_bytes:
+                img = img.read()
+            elif isinstance(img, str):
+                img = Image.open(img).convert('RGB')
         except Exception as e:
             _logger.warning(f'Skipped sample (index {index}, file of PIL). {str(e)}')
             self._consecutive_errors += 1
