@@ -25,6 +25,11 @@ SALT = 'blakboxoperator'                #
 #[API 開發說明文件] : https://hackmd.io/@wendy81214/BygUwgs4u
 #[API 規格說明文件] : https://hackmd.io/@wendy81214/ByDht0bVu
 
+epoch = datetime.datetime.utcfromtimestamp(0)
+
+def unix_time_millis(dt):
+    return (dt - epoch).total_seconds() * 1000.0
+
 def generate_server_uuid(input_string):
     """ Create your own server_uuid.
 
@@ -119,12 +124,13 @@ def inference():
     ts = str(int(t.utcnow().timestamp()))
     server_uuid = generate_server_uuid(CAPTAIN_EMAIL + ts)
 
-    server_timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    server_timestamp = unix_time_millis(datetime.datetime.now())
+    # datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     answer_template = lambda ans: jsonify({
         'esun_uuid': data['esun_uuid'],
         'server_uuid': server_uuid,
-        'answer': ans,
+        'answer': ans[0], # unpack list
         'server_timestamp': server_timestamp})
 
     if data['esun_uuid'] in cache_answer:
@@ -138,6 +144,7 @@ def inference():
         cache_answer[data['esun_uuid']] = None
         try:
             answer = predict([image])
+            image.save("history/{}_{}.jpg".format(server_timestamp, ''.join(answer)), "JPEG")
         except TypeError as type_error:
             # You can write some log...
             print("tye error: {}".format(type_error))

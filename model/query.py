@@ -8,6 +8,7 @@ from pprint import pprint
 from time import sleep
 
 ip = 'http://127.0.0.1:8080'
+ip = "http://59.126.176.119"
 
 time_limit = 1
 
