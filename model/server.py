@@ -154,6 +154,7 @@ def inference():
 
         cache_answer[data['esun_uuid']] = answer
 
+        print("cost {} s".format(datetime.datetime.now() - t))
         return answer_template(answer)
 
 
@@ -168,15 +169,15 @@ if __name__ == "__main__":
     infs = [ model2inf("""--model tf_efficientnet_b5_ns
                          --pretrained --checkpoint ./output/train/20210514-133801-tf_efficientnet_b5_ns-256/checkpoint-29.pth.tar
                          -b 1 --input-size 3 256 256 -j 8 --num-classes 801""")
-            , model2inf("""--model tf_efficientnet_b7_ns
-                         --pretrained --checkpoint ./output/train/20210515-052108-tf_efficientnet_b7_ns-256/checkpoint-27.pth.tar
-                         -b 1 --input-size 3 256 256 -j 8 --num-classes 801""")
-            , model2inf("""--model tf_efficientnet_b6_ns
-                         --pretrained --checkpoint ./output/train/20210516-022130-tf_efficientnet_b6_ns-256/checkpoint-27.pth.tar
-                         -b 1 --input-size 3 256 256 -j 8 --num-classes 801""")
-            , model2inf("""--model tf_efficientnet_b5_ns
-                         --pretrained --checkpoint ./output/train/20210516-212550-tf_efficientnet_b5_ns-256/checkpoint-38.pth.tar
-                         -b 1 --input-size 3 256 256 -j 8 --num-classes 801""")
+            #, model2inf("""--model tf_efficientnet_b7_ns
+            #             --pretrained --checkpoint ./output/train/20210515-052108-tf_efficientnet_b7_ns-256/checkpoint-27.pth.tar
+            #             -b 1 --input-size 3 256 256 -j 8 --num-classes 801""")
+            #, model2inf("""--model tf_efficientnet_b6_ns
+            #             --pretrained --checkpoint ./output/train/20210516-022130-tf_efficientnet_b6_ns-256/checkpoint-27.pth.tar
+            #             -b 1 --input-size 3 256 256 -j 8 --num-classes 801""")
+            #, model2inf("""--model tf_efficientnet_b5_ns
+            #             --pretrained --checkpoint ./output/train/20210516-212550-tf_efficientnet_b5_ns-256/checkpoint-38.pth.tar
+            #             -b 1 --input-size 3 256 256 -j 8 --num-classes 801""")
             #, model2inf("""--model tf_efficientnet_b5_ns
             #             --pretrained --checkpoint ./output/train/20210516-212550-tf_efficientnet_b5_ns-256/checkpoint-38.pth.tar
             #             -b 1 --input-size 3 256 256 -j 8 --num-classes 801""")
@@ -202,4 +203,4 @@ if __name__ == "__main__":
         print("invalid model args")
         exit(1)
 
-    app.run(debug=options.debug, port=options.port)
+    app.run(host="0.0.0.0", debug=options.debug, port=options.port)

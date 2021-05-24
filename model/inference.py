@@ -162,8 +162,8 @@ def model2inf(arg_line = ''):
             crop_pct=1.0 if test_time_pool else config['crop_pct'])
 
         k = min(args.topk, args.num_classes)
-        batch_time = AverageMeter()
-        end = time.time()
+        #batch_time = AverageMeter()
+        #end = time.time()
 
         topk_ids = []
         topk_vals = []
@@ -176,12 +176,12 @@ def model2inf(arg_line = ''):
                 topk_vals.append(topv.cpu().numpy())
 
                 # measure elapsed time
-                batch_time.update(time.time() - end)
-                end = time.time()
+                #batch_time.update(time.time() - end)
+                #end = time.time()
 
-                if batch_idx % args.log_freq == 0:
-                    _logger.info('Predict: [{0}/{1}] Time {batch_time.val:.3f} ({batch_time.avg:.3f})'.format(
-                        batch_idx, len(loader), batch_time=batch_time))
+                #if batch_idx % args.log_freq == 0:
+                #    _logger.info('Predict: [{0}/{1}] Time {batch_time.val:.3f} ({batch_time.avg:.3f})'.format(
+                #        batch_idx, len(loader), batch_time=batch_time))
 
         topk_ids = np.reshape(np.concatenate(topk_ids, axis=0).squeeze(), (-1, k))
         topk_vals = np.reshape(np.concatenate(topk_vals, axis=0).squeeze(), (-1, k))

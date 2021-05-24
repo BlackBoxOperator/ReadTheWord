@@ -6,9 +6,10 @@ import pandas as pd
 import base64
 from pprint import pprint
 from time import sleep
+import concurrent.futures
 
 ip = 'http://127.0.0.1:8080'
-ip = "http://59.126.176.119"
+#ip = "http://59.126.176.119"
 
 time_limit = 1
 
@@ -113,6 +114,21 @@ def emit_question(fpath):
         sleep(0.2)
         return answer
 
+q = None
+
+def doWork():
+    global q
+    while True:
+        path = q.get()
+        emit_question(path)
+        q.task_done()
+
+def single(path):
+    pred = emit_question(path)
+    print("{} ?=> {}".format(path, pred))
+
+way = single
+
 if __name__ == '__main__':
     #queries = pd.read_csv(queryFile)
     if len(sys.argv) < 2:
@@ -121,14 +137,14 @@ if __name__ == '__main__':
 
     for path in sys.argv[1:]:
         if os.path.isfile(path):
-            pred = emit_question(path)
-            print("{} ?=> {}".format(path, pred))
+            #way(path)
+            with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool:
+                results = pool.map(way, [path] * 4)
         elif os.path.isdir(path):
             for root, dirs, files in os.walk(path, topdown=False):
                 for name in files:
                     fpath = os.path.join(root, name)
-                    pred = emit_question(fpath)
-                    print("{} ?=> {}".format(fpath, pred))
+                    way(fpath)
                     #lab = name.split('_')[1].split('.')[0]
         else: print("no such file or directory: {}".format(path))
 
